@@ -29,6 +29,7 @@ The scan writes `compatibility.json`, `compatibility.md` and `recipes.json`. The
 - [Usage guide](docs/usage.md): reproduce a scan, inspect a recipe, compare snapshots
 - [Assessment method](docs/method.md): what is checked, classification rules and limitations
 - [Using scan data](docs/integration.md): advisory interpretation for Terraform and Ansible
+- [Kubernetes deployment considerations](docs/kubernetes.md): compare guest installations with Kubernetes applications and their data requirements
 - [Contributing](CONTRIBUTING.md): tests and examples for detector changes
 
 ## Compare two scans
