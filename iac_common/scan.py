@@ -163,6 +163,15 @@ def scan(root, kind="all", slug=None, core=None):
     return rows
 
 
+def syntax_failed(rows, core_syntax=()):
+    """Report any rejected Bash syntax in entries, LXC payloads or Core files."""
+    return (any(row.get("syntax_ok") is False or
+                (row.get("install_payload") is not None and
+                 row["install_payload"].get("syntax_ok") is False)
+                for row in rows)
+            or any(item.get("syntax_ok") is False for item in core_syntax))
+
+
 def markdown(rows, revision, core_revision, retired=None):
     retired = retired or []
     counts = Counter(row["assessment"] for row in rows)
@@ -225,7 +234,7 @@ def main():
     report = markdown(rows, args.scripts_rev, args.core_rev, retired)
     (args.output / "compatibility.md").write_text(report)
     print("\n".join(report.splitlines()[:13]))
-    if args.strict_syntax and any(not row["syntax_ok"] for row in all_rows + core_syntax):
+    if args.strict_syntax and syntax_failed(all_rows, core_syntax):
         raise SystemExit(1)
 
 

@@ -64,6 +64,9 @@ class CompareTests(unittest.TestCase):
         out = self.report({"lxc/adguard": self.entry("lxc", "adguard", "supported")})
         with self.assertRaises(ValueError):
             compare(out, out)
+        out = self.report({"lxc/adguard": {"kind": 120, "slug": "adguard", "assessment": "retired"}})
+        with self.assertRaises(ValueError):
+            compare(out, out)
         out = self.report({})
         out["validation"] = "live"
         with self.assertRaises(ValueError):

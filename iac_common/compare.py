@@ -35,7 +35,9 @@ def _check(report: dict) -> None:
         if (not isinstance(key, str) or
             not re.fullmatch(r"(?:lxc|vm)/[a-z0-9][a-z0-9-]*", key) or
             not isinstance(row, dict) or row.get("assessment") not in KNOWN or
-            key != row.get("kind", "") + "/" + row.get("slug", "")):
+            row.get("kind") not in ("lxc", "vm") or
+            not isinstance(row.get("slug"), str) or
+            key != row["kind"] + "/" + row["slug"]):
             raise ValueError("invalid recipe record: " + str(key))
 
 

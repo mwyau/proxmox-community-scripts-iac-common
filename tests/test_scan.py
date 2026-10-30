@@ -70,6 +70,20 @@ class ScanTests(unittest.TestCase):
         row = scanner.scan(self.root, "lxc", "bad", self.root / "core")[0]
         self.assertEqual(row["assessment"], "syntax_error")
         self.assertIn("install_payload_syntax_error", row["flags"])
+        # Strict syntax must reject the payload even though the entry script passes.
+        self.assertTrue(row["syntax_ok"])
+        self.assertFalse(row["install_payload"]["syntax_ok"])
+        self.assertTrue(scanner.syntax_failed([row]))
+
+
+    def test_strict_syntax_includes_core_and_entries(self):
+        self.assertFalse(scanner.syntax_failed(
+            [{"syntax_ok": True, "install_payload": None}],
+            [{"syntax_ok": True}]))
+        self.assertTrue(scanner.syntax_failed(
+            [{"syntax_ok": True, "install_payload": None}],
+            [{"syntax_ok": False}]))
+        self.assertTrue(scanner.syntax_failed([{"syntax_ok": False}]))
 
     def test_no_core_not_assumed_compatible(self):
         (self.root / "ct/debian.sh").write_text(
