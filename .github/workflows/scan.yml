@@ -1,0 +1,77 @@
+name: Upstream recipe scan
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: Recipe kind
+        type: choice
+        options: [all, lxc, vm]
+        default: all
+      slug:
+        description: Optional recipe slug
+        type: string
+      scripts_ref:
+        description: ProxmoxVE Git revision
+        type: string
+        default: main
+      core_ref:
+        description: Core Git revision
+        type: string
+        default: main
+  schedule:
+    - cron: '21 5 * * 1'
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KIND: ${{ inputs.kind || 'all' }}
+      SLUG: ${{ inputs.slug || '' }}
+      SCRIPTS_REF: ${{ inputs.scripts_ref || 'main' }}
+      CORE_REF: ${{ inputs.core_ref || 'main' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate untrusted refs
+        run: |
+          python - <<'PY'
+          import os, re
+          assert os.environ['KIND'] in ('all','lxc','vm')
+          assert not os.environ['SLUG'] or re.fullmatch(r'[a-z0-9][a-z0-9-]*', os.environ['SLUG'])
+          for name in ('SCRIPTS_REF','CORE_REF'):
+              ref = os.environ[name]
+              assert ref and re.fullmatch(r'[A-Za-z0-9._/-]+',ref) and '..' not in ref
+          PY
+      - name: Clone upstream source read-only
+        run: |
+          set -euo pipefail
+          git clone --quiet --depth 1 https://github.com/community-scripts/ProxmoxVE.git upstream-scripts
+          git clone --quiet --depth 1 https://github.com/community-scripts/core.git upstream-core
+          for pair in "upstream-scripts:$SCRIPTS_REF" "upstream-core:$CORE_REF"; do
+            repo="${pair%%:*}"; ref="${pair#*:}"
+            if [[ "$ref" != main ]]; then
+              git -C "$repo" fetch --quiet --depth 1 origin "$ref"
+              git -C "$repo" checkout --quiet --detach FETCH_HEAD
+            fi
+          done
+          echo "SCRIPTS_SHA=$(git -C upstream-scripts rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "CORE_SHA=$(git -C upstream-core rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Inspect recipe source and produce status index
+        run: |
+          set -euo pipefail
+          args=(--source upstream-scripts --core upstream-core --kind "$KIND" --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax)
+          if [[ -n "$SLUG" ]]; then args+=(--script "$SLUG"); fi
+          python -m iac_common.scan "${args[@]}"
+          python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
+          cat out/compatibility.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recipe-status
+          path: out/
+          retention-days: 30
+          if-no-files-found: warn
