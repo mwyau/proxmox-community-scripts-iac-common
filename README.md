@@ -1,38 +1,41 @@
 # Proxmox Community Scripts IaC — Common
 
-Read-only recipe discovery, retirement detection, syntax checks, prompt-call evidence, and generated recipe status for the companion Terraform provider and Ansible collection.
+Analyze [Proxmox Community Scripts](https://github.com/community-scripts/ProxmoxVE) recipes without running them. The scanner checks shell syntax, shared Core entry points, potential interactive prompts and retirement notices. It records the results for each LXC and VM recipe at specified Git revisions.
 
-This repository is **not** a Terraform provider, an Ansible collection, or a shell installer. It contains no shared guest-setting contract, no Proxmox credentials, and no host mutation code.
+The results describe **source evidence**. A recipe with no detected prompts may still require input or fail during installation.
 
-## What it contains
+## Run a scan
 
-- `iac_common/scan.py`: source-only scan of upstream `community-scripts/ProxmoxVE` and `community-scripts/core`
-- `iac_common/retirement.py`: conservative retired/renamed stub detection
-- `iac_common/catalog.py`: directory discovery and Git blob revision comparisons
-- `iac_common/vm_evidence.py`: VM script variable-reference evidence (including bpg/proxmox-style setting names)
-- `iac_common/status.py`: reproducible `recipes.json` status index keyed by `lxc/slug` or `vm/slug`
-
-No installation scripts are executed. `bash -n` performs syntax checking only. Static detection of prompts or a shared Core entrypoint **does not establish safe unattended installation**. Every consumer must verify a selected pinned script and enforce its own execution approvals.
-
-## Run locally
+Python 3.12+ and Bash are required. From the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/community-scripts/ProxmoxVE.git upstream-scripts
 git clone --depth 1 https://github.com/community-scripts/core.git upstream-core
 SCRIPTS_SHA=$(git -C upstream-scripts rev-parse HEAD)
 CORE_SHA=$(git -C upstream-core rev-parse HEAD)
+
 python -m iac_common.scan --source upstream-scripts --core upstream-core \
-  --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax
+  --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" \
+  --strict-syntax --output out
 python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
-python -m unittest discover -s tests -v
 ```
 
-`out/recipes.json` includes the exact source revisions, per-recipe assessment, retirement, syntax and prompt evidence. `out/compatibility.md` is a human-readable summary. The GitHub workflow runs weekly or on demand and uploads the results as artifacts; **it does not automatically commit changing upstream output into the source branch**.
+The scan writes `compatibility.json`, `compatibility.md` and `recipes.json`. The status index contains source links and script/Core revisions. GitHub Actions runs the scan weekly from the default branch and supports manual runs. Reports are uploaded as workflow artifacts for 30 days; they are not published as persistent files.
 
-## Ownership
+## Documentation
 
-Source analysis moved from `mwyau/ansible-collection-proxmox-community-scripts`, and VM static field-use evidence also informs `mwyau/terraform-provider-proxmox-community-scripts` plan warnings. Terraform's pinned plan-time inspector and Ansible's catalog/provenance module remain self-contained for fail-closed runtime behavior. Do not install this package on Proxmox or depend on live network access to apply changes. Follow source SHA links in the report when investigating a recipe.
+- [Usage guide](docs/usage.md): reproduce a scan, inspect a recipe, compare snapshots
+- [Assessment method](docs/method.md): what is checked, classification rules and limitations
+- [Using scan data](docs/integration.md): advisory interpretation for Terraform and Ansible
+- [Contributing](CONTRIBUTING.md): tests and examples for detector changes
 
-## Limits
+## Compare two scans
 
-The `shared_engine_no_app_prompts_detected` category is **not** a green light or guarantee; external app scripts, sourced functions, dynamically constructed commands, credentials and package downloads are not fully modeled. A recipe can change at any upstream revision. Never infer support for an unscanned commit.
+```sh
+python -m iac_common.compare --before old/recipes.json --after new/recipes.json \
+  --output out/changes.json --markdown out/changes.md
+```
+
+A comparison lists new or missing recipe names and changes in recorded evidence. It does not compare every line of source code. An unchanged assessment is not evidence that the upstream recipe is unchanged.
+
+The companion [Terraform provider](https://github.com/mwyau/terraform-provider-proxmox-community-scripts) and [Ansible collection](https://github.com/mwyau/ansible-collection-proxmox-community-scripts) perform their own pinned-source and Proxmox checks before installation. Scan results do not authorize executing installer scripts as root.

@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import json
+import re
 from pathlib import Path
 
 KNOWN = {
@@ -30,7 +31,7 @@ def build_status(scan: dict) -> dict:
     records = {}
     for row in [*scan.get("scripts", []), *scan.get("excluded_retired", [])]:
         kind, slug = row.get("kind"), row.get("slug")
-        if kind not in ("lxc", "vm") or not isinstance(slug, str) or not slug:
+        if kind not in ("lxc", "vm") or not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug):
             raise ValueError("invalid kind/slug")
         name = kind + "/" + slug
         if name in records:
@@ -39,7 +40,10 @@ def build_status(scan: dict) -> dict:
         assessment = "retired" if is_retired else row.get("assessment")
         if assessment not in KNOWN:
             raise ValueError("unknown assessment for " + name)
+        source_path = ("ct" if kind == "lxc" else "vm") + "/" + slug + ".sh"
         records[name] = {
+            "source_path": source_path,
+            "source_url": "https://github.com/community-scripts/ProxmoxVE/blob/" + scripts_ref + "/" + source_path,
             "assessment": assessment,
             "kind": kind,
             "slug": slug,

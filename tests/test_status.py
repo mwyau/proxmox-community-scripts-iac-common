@@ -27,6 +27,8 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(out["counts"]["retired"], 1)
         self.assertEqual(out["recipes"]["lxc/old"]["assessment"], "retired")
         self.assertEqual(out["validation"], "static_only")
+        self.assertEqual(out["recipes"]["lxc/adguard"]["source_path"], "ct/adguard.sh")
+        self.assertIn("/blob/" + "a" * 40 + "/ct/adguard.sh", out["recipes"]["lxc/adguard"]["source_url"])
         self.assertIn("not installation", out["warning"])
 
     def test_rejects_mutable_revisions(self):
