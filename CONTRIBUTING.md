@@ -4,11 +4,12 @@ This project analyzes shell source. A detector change should state which source 
 
 ## Tests
 
-Run from the repository root:
+Run from the repository root with uv installed:
 
 ```sh
-python -m compileall -q iac_common tests
-python -m unittest discover -s tests -v
+uv lock --check
+uv run --locked python -m compileall -q iac_common tests
+uv run --locked python -m unittest discover -s tests -v
 ```
 
 Tests use small synthetic scripts. Add a positive case and a plausible negative case when introducing a prompt, Core, retirement or VM-reference detector. A new assessment must have a documented meaning and a test showing its priority relative to existing assessments.

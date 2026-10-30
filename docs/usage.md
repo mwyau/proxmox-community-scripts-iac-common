@@ -7,10 +7,10 @@ Clone the upstream repositories as shown in the [README](../README.md). Use the 
 ```sh
 SCRIPTS_SHA=$(git -C upstream-scripts rev-parse HEAD)
 CORE_SHA=$(git -C upstream-core rev-parse HEAD)
-python -m iac_common.scan --source upstream-scripts --core upstream-core \
+uv run --locked python -m iac_common.scan --source upstream-scripts --core upstream-core \
   --kind lxc --script adguard --scripts-rev "$SCRIPTS_SHA" \
   --core-rev "$CORE_SHA" --strict-syntax --output out
-python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
+uv run --locked python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
 ```
 
 This reads `ct/adguard.sh`, its install payload if present, and the selected Core files. It does not install AdGuard or connect to Proxmox.
@@ -43,7 +43,7 @@ Then run the scanner using the two `git rev-parse HEAD` values. The `--scripts-r
 Save the two `recipes.json` files produced from distinct pinned scans, then run:
 
 ```sh
-python -m iac_common.compare \
+uv run --locked python -m iac_common.compare \
   --before snapshots/previous/recipes.json \
   --after snapshots/current/recipes.json \
   --output out/changes.json --markdown out/changes.md

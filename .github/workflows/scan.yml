@@ -33,9 +33,14 @@ jobs:
       CORE_REF: ${{ inputs.core_ref || 'main' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: '3.12'
+          version: "0.13.6"
+          enable-cache: true
+      - name: Install pinned Python and dependencies
+        run: |
+          uv python install
+          uv sync --locked
       - name: Validate untrusted refs
         run: |
           python - <<'PY'
@@ -65,8 +70,8 @@ jobs:
           set -euo pipefail
           args=(--source upstream-scripts --core upstream-core --kind "$KIND" --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax)
           if [[ -n "$SLUG" ]]; then args+=(--script "$SLUG"); fi
-          python -m iac_common.scan "${args[@]}"
-          python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
+          uv run --locked python -m iac_common.scan "${args[@]}"
+          uv run --locked python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
           cat out/compatibility.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()

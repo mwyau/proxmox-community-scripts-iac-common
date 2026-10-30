@@ -10,13 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: '3.12'
+          version: "0.13.6"
+          enable-cache: true
+      - name: Install pinned Python and dependencies
+        run: |
+          uv python install
+          uv sync --locked
+      - name: Verify committed lockfile
+        run: uv lock --check
       - name: Validate pure static analyzer and status
         run: |
-          python -m compileall -q iac_common tests
-          python -m unittest discover -s tests -v
+          uv run --locked python -m compileall -q iac_common tests
+          uv run --locked python -m unittest discover -s tests -v
 
   upstream-preview:
     if: github.ref == 'refs/heads/feat/recipe-scanner-status'
@@ -24,9 +31,16 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: '3.12'
+          version: "0.13.6"
+          enable-cache: true
+      - name: Install pinned Python and dependencies
+        run: |
+          uv python install
+          uv sync --locked
+      - name: Verify committed lockfile
+        run: uv lock --check
       - name: Fetch upstream sources for full read-only scan
         run: |
           set -euo pipefail
@@ -37,8 +51,8 @@ jobs:
       - name: Scan all recipes and generate status
         run: |
           set -euo pipefail
-          python -m iac_common.scan --source upstream-scripts --core upstream-core --kind all --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax
-          python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
+          uv run --locked python -m iac_common.scan --source upstream-scripts --core upstream-core --kind all --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax
+          uv run --locked python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
           cat out/compatibility.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()

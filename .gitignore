@@ -4,3 +4,4 @@ upstream-scripts/
 upstream-core/
 out/
 .pytest_cache/
+.venv/

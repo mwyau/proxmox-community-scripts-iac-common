@@ -1,0 +1,9 @@
+[project]
+name = "proxmox-community-scripts-iac-common"
+version = "0.1.0"
+description = "Read-only analysis of Proxmox Community Scripts recipes for IaC"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false

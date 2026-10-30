@@ -6,7 +6,9 @@ The results describe **source evidence**. A recipe with no detected prompts may 
 
 ## Run a scan
 
-Python 3.12+ and Bash are required. From the repository root:
+Install [uv](https://docs.astral.sh/uv/) and run `uv sync --locked` from this directory. The project has no third-party Python dependencies.
+
+uv and Bash are required. uv installs Python 3.12 from `.python-version`. From the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/community-scripts/ProxmoxVE.git upstream-scripts
@@ -14,10 +16,10 @@ git clone --depth 1 https://github.com/community-scripts/core.git upstream-core
 SCRIPTS_SHA=$(git -C upstream-scripts rev-parse HEAD)
 CORE_SHA=$(git -C upstream-core rev-parse HEAD)
 
-python -m iac_common.scan --source upstream-scripts --core upstream-core \
+uv run --locked python -m iac_common.scan --source upstream-scripts --core upstream-core \
   --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" \
   --strict-syntax --output out
-python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
+uv run --locked python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
 ```
 
 The scan writes `compatibility.json`, `compatibility.md` and `recipes.json`. The status index contains source links and script/Core revisions. GitHub Actions runs the scan weekly from the default branch and supports manual runs. Reports are uploaded as workflow artifacts for 30 days; they are not published as persistent files.
@@ -32,7 +34,7 @@ The scan writes `compatibility.json`, `compatibility.md` and `recipes.json`. The
 ## Compare two scans
 
 ```sh
-python -m iac_common.compare --before old/recipes.json --after new/recipes.json \
+uv run --locked python -m iac_common.compare --before old/recipes.json --after new/recipes.json \
   --output out/changes.json --markdown out/changes.md
 ```
 
