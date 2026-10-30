@@ -25,7 +25,7 @@ Treat migration as an application-specific operation. Export or back up the data
 
 ## What belongs in this repository
 
-A useful extension would be a **curated deployment-options index** linking a recipe slug to verified upstream application documentation, container image sources, and Helm or operator documentation. Each entry should identify who verified the link and at which source revision. Missing entries should be reported as unknown.
+A [curated deployment-options index](kubernetes-alternatives.md) links selected recipe slugs to application documentation, container image sources, and Helm/operator references. It records the reviewed source revision and review date. Missing entries are unknown.
 
 Avoid generating Kubernetes manifests from shell-installation settings. There is no general translation from Proxmox guest properties, `var_*` or `VM_*` installer variables to Kubernetes Pods, security contexts, storage classes, or Services.
 

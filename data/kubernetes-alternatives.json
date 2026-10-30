@@ -1,0 +1,178 @@
+{
+  "format_version": 1,
+  "reviewed_on": "2026-10-30",
+  "scripts_revision": "bc6ab719828f9d52556af3a17ceff2f01c1a17d6",
+  "scope": "Reviewed upstream application deployment references; no deployment test or application-version compatibility claimed.",
+  "entries": {
+    "lxc/adguard": {
+      "application": "AdGuard Home",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/adguard.sh",
+      "images": [
+        {
+          "reference": "adguard/adguardhome",
+          "documentation": "https://adguard-dns.io/kb/adguard-home/docker/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": null,
+      "operators": null,
+      "notes": [
+        "Kubernetes Service and networking choices must account for TCP and UDP port 53; DHCP and client IP behavior need separate review.",
+        "Preserve the application's work and configuration directories."
+      ]
+    },
+    "lxc/vaultwarden": {
+      "application": "Vaultwarden",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/vaultwarden.sh",
+      "images": [
+        {
+          "reference": "vaultwarden/server",
+          "documentation": "https://github.com/dani-garcia/vaultwarden#dockerpodman-cli",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": null,
+      "operators": null,
+      "notes": [
+        "Use HTTPS and a suitable reverse proxy for web-vault use.",
+        "Persist the /data directory; the image documentation does not establish an official Helm chart."
+      ]
+    },
+    "lxc/gitea": {
+      "application": "Gitea",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/gitea.sh",
+      "images": [
+        {
+          "reference": "docker.gitea.com/gitea",
+          "documentation": "https://docs.gitea.com/installation/install-with-docker/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "gitea",
+          "reference": "gitea-charts/gitea",
+          "documentation": "https://docs.gitea.com/1.27/installation/install-on-kubernetes/",
+          "publisher": "application"
+        }
+      ],
+      "operators": null,
+      "notes": [
+        "The chart includes configuration for persistent storage, Git service endpoints and a database. Select a chart version and application image explicitly.",
+        "Enterprise-specific chart examples must not be treated as instructions for the open-source image."
+      ]
+    },
+    "lxc/grafana": {
+      "application": "Grafana",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/grafana.sh",
+      "images": [
+        {
+          "reference": "grafana/grafana",
+          "documentation": "https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "grafana",
+          "reference": "grafana-community/grafana",
+          "documentation": "https://grafana.com/docs/grafana/latest/setup-grafana/installation/helm/",
+          "publisher": "community"
+        }
+      ],
+      "operators": null,
+      "notes": [
+        "Persist dashboards, users and data-source configuration; Grafana documents persistence settings for its Helm chart.",
+        "The grafana/grafana-oss image is being retired in favor of grafana/grafana."
+      ]
+    },
+    "lxc/prometheus": {
+      "application": "Prometheus",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/prometheus.sh",
+      "images": [
+        {
+          "reference": "quay.io/prometheus/prometheus",
+          "documentation": "https://prometheus.io/docs/prometheus/latest/installation/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "kube-prometheus-stack",
+          "reference": "prometheus-community/kube-prometheus-stack",
+          "documentation": "https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md",
+          "publisher": "community"
+        }
+      ],
+      "operators": [
+        {
+          "name": "Prometheus Operator (deployed by kube-prometheus-stack)",
+          "documentation": "https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md",
+          "publisher": "community"
+        }
+      ],
+      "notes": [
+        "kube-prometheus-stack installs multiple monitoring components, not just a replacement for a single Prometheus process.",
+        "Review scrape configuration, persistent metrics storage, retention and storage class."
+      ]
+    },
+    "lxc/immich": {
+      "application": "Immich",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/immich.sh",
+      "images": [
+        {
+          "reference": "ghcr.io/immich-app/immich-server",
+          "documentation": "https://docs.immich.app/install/docker-compose/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "immich",
+          "reference": "oci://ghcr.io/immich-app/immich-charts/immich",
+          "documentation": "https://github.com/immich-app/immich-charts/blob/main/README.md",
+          "publisher": "application"
+        }
+      ],
+      "operators": null,
+      "notes": [
+        "The chart requires a photo-library volume, PostgreSQL with the specified extension, and Redis.",
+        "The chart's application image version must be selected explicitly; Immich does not publish a new chart for every application release."
+      ]
+    },
+    "lxc/forgejo": {
+      "application": "Forgejo",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/forgejo.sh",
+      "images": [
+        {
+          "reference": "codeberg.org/forgejo/forgejo",
+          "documentation": "https://forgejo.org/docs/v17.0/admin/installation/docker/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": null,
+      "operators": null,
+      "notes": [
+        "The Forgejo project documents an official container image; third-party Kubernetes packaging is not included without a reviewed source.",
+        "Back up Git repositories, the database, configuration and signing keys before any migration."
+      ]
+    },
+    "lxc/homeassistant": {
+      "application": "Home Assistant",
+      "recipe_source": "https://github.com/community-scripts/ProxmoxVE/blob/bc6ab719828f9d52556af3a17ceff2f01c1a17d6/ct/homeassistant.sh",
+      "images": [
+        {
+          "reference": "ghcr.io/home-assistant/home-assistant",
+          "documentation": "https://www.home-assistant.io/installation/linux/",
+          "publisher": "application"
+        }
+      ],
+      "helm_charts": null,
+      "operators": null,
+      "notes": [
+        "Home Assistant Container is not the same installation type as Home Assistant OS; Container lacks Supervisor apps.",
+        "Host networking, discovery, Bluetooth or other device integrations may require host-level access and additional configuration."
+      ]
+    }
+  }
+}

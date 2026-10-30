@@ -30,7 +30,18 @@ The scan writes `compatibility.json`, `compatibility.md` and `recipes.json`. The
 - [Assessment method](docs/method.md): what is checked, classification rules and limitations
 - [Using scan data](docs/integration.md): advisory interpretation for Terraform and Ansible
 - [Kubernetes deployment considerations](docs/kubernetes.md): compare guest installations with Kubernetes applications and their data requirements
+- [Curated Kubernetes references](docs/kubernetes-alternatives.md): reviewed container images, Helm charts and operators for selected recipes
 - [Contributing](CONTRIBUTING.md): tests and examples for detector changes
+
+## Review Kubernetes deployment references
+
+```sh
+uv run --locked python -m iac_common.kubernetes list
+uv run --locked python -m iac_common.kubernetes show lxc/gitea
+uv run --locked python -m iac_common.kubernetes validate --recipes out/recipes.json
+```
+
+The curated index covers selected applications and records evidence links; `unknown` is used where a deployment option has not been reviewed. This does not establish Kubernetes compatibility or replace installation tests.
 
 ## Compare two scans
 
