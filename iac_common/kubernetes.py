@@ -23,8 +23,7 @@ def _https(url: object) -> bool:
         return False
     parsed = urlparse(url)
     return (parsed.scheme == "https" and bool(parsed.hostname)
-            and not parsed.username and not parsed.password
-            and not parsed.fragment)
+            and not parsed.username and not parsed.password)
 
 
 def load_catalog(path: Path = DATA) -> dict:
