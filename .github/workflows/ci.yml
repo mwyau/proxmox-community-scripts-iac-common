@@ -24,6 +24,10 @@ jobs:
         run: |
           uv run --locked python -m compileall -q iac_common tests
           uv run --locked python -m unittest discover -s tests -v
+      - name: Validate curated Kubernetes references CLI
+        run: |
+          uv run --locked python -m iac_common.kubernetes list
+          uv run --locked python -m iac_common.kubernetes show lxc/immich >/dev/null
 
   upstream-preview:
     if: github.ref == 'refs/heads/feat/recipe-scanner-status'
@@ -54,6 +58,15 @@ jobs:
           uv run --locked python -m iac_common.scan --source upstream-scripts --core upstream-core --kind all --scripts-rev "$SCRIPTS_SHA" --core-rev "$CORE_SHA" --output out --strict-syntax
           uv run --locked python -m iac_common.status --scan out/compatibility.json --output out/recipes.json
           cat out/compatibility.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Check curated recipes against pinned source when revisions match
+        run: |
+          set -euo pipefail
+          CATALOG_SHA="$(uv run --locked python -c 'from iac_common.kubernetes import load_catalog; print(load_catalog()["scripts_revision"])')"
+          if [[ "$CATALOG_SHA" == "$SCRIPTS_SHA" ]]; then
+            uv run --locked python -m iac_common.kubernetes validate --recipes out/recipes.json
+          else
+            echo "Curated alternatives reference $CATALOG_SHA; preview uses $SCRIPTS_SHA, so membership comparison is not applicable."
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
